@@ -110,7 +110,6 @@ class Claimer:
             
             response = await http_client.post('https://cexp.cex.io/api/claimFarm', data=json.dumps(payload))
             response.raise_for_status()
-            #https://cexp.cex.io/api/claimFarm
             response = await http_client.post('https://cexp.cex.io/api/startFarm', data=json.dumps(payload))
             response.raise_for_status()
             await asyncio.sleep(3)
@@ -142,11 +141,12 @@ class Claimer:
                     if time() - access_token_created_time >= 3600:
                         tg_web_data = await self.get_tg_web_data(proxy=proxy)
                         user = dict(parse.parse_qsl(tg_web_data))
-                        user_id =user.get('user').get('id')
+                        user_id =json.loads(user.get('user',{})).get('id')
                         available_tap = await self.get_availableTaps(tg_web_data, user_id)
                         if available_tap ==0:
                             await asyncio.sleep(60*60)
                         await self.send_claim( http_client =http_client,tg_web_data= tg_web_data, user_id =user_id, num_tap=available_tap)
+                        await self.farm( http_client =http_client,tg_web_data= tg_web_data, user_id =user_id, num_tap=available_tap)
                 except InvalidSession as error:
                     raise error
 
@@ -160,7 +160,6 @@ class Claimer:
 
 
 async def run_claimer(tg_client: Client, proxy: str | None):
-    print("okee")
     try:
         await Claimer(tg_client=tg_client).run(proxy=proxy)
     except InvalidSession:

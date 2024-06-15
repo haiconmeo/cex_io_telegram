@@ -100,7 +100,26 @@ class Claimer:
             await asyncio.sleep(delay=30)
 
             return False
+        
+    async def farm(self, http_client: aiohttp.ClientSession,tg_web_data: str, user_id, num_tap) -> bool:
+        try:
+            
+            payload = {"devAuthData":user_id,
+                       "authData": tg_web_data,
+                       "data":{}}
+            
+            response = await http_client.post('https://cexp.cex.io/api/claimFarm', data=json.dumps(payload))
+            response.raise_for_status()
+            #https://cexp.cex.io/api/claimFarm
+            response = await http_client.post('https://cexp.cex.io/api/startFarm', data=json.dumps(payload))
+            response.raise_for_status()
+            await asyncio.sleep(3)
+            return True
+        except Exception as error:
+            logger.error(f"{self.session_name} | Unknown error when Claiming: {error}")
+            await asyncio.sleep(delay=30)
 
+            return False
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
         try:
             response = await http_client.get(url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5))
